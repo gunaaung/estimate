@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบประมาณการคดี (Case Estimation System)</title>
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        .input-focus {
+            transition: all 0.2s;
+        }
+        .input-focus:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            outline: none;
+        }
+        /* Remove arrows from number input */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header Section -->
+        <div class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-slate-800 mb-2">ระบบประมาณการและรายงานผลคดี</h1>
+            <p class="text-slate-500 text-lg">ป้อนข้อมูลคดีสิ้นสุดและคดีส่งอัยการเพื่อประมาณการสัดส่วนคดีและส่งออก Excel</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Sidebar: User Input -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="card p-6 border-t-4 border-blue-600">
+                    <h2 class="text-xl font-semibold mb-5 text-slate-700 flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        บันทึกข้อมูลนำเข้า
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <label class="block text-sm font-bold text-blue-700 mb-2">1. เคส ID ทั้งหมด</label>
+                            <input type="number" id="totalCases" value="100" min="0" oninput="calculateResults()" 
+                                class="input-focus w-full px-4 py-2 border border-blue-200 rounded-lg text-lg font-bold text-slate-800">
+                        </div>
+                        
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <label class="block text-sm font-bold text-green-700 mb-2">2. เคสไอดีที่กดสิ้นสุดแล้ว</label>
+                            <input type="number" id="totalClosed" value="60" min="0" oninput="calculateResults()" 
+                                class="input-focus w-full px-4 py-2 border border-green-200 rounded-lg text-lg font-bold text-slate-800">
+                        </div>
+
+                        <div class="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                            <label class="block text-sm font-bold text-amber-700 mb-2">3. ส่งสำนวนพนักงานอัยการ (จริง)</label>
+                            <input type="number" id="prosecutorInput" value="40" min="0" oninput="calculateResults()" 
+                                class="input-focus w-full px-4 py-2 border border-amber-300 rounded-lg text-lg font-bold text-slate-800">
+                        </div>
+
+                        <!-- Error Message -->
+                        <div id="errorMessage" class="hidden p-3 bg-red-100 text-red-700 text-xs rounded-lg flex items-start">
+                            <svg class="w-4 h-4 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>จำนวนคดีส่งอัยการต้องไม่เกินจำนวนคดีที่สิ้นสุดทั้งหมด</span>
+                        </div>
+
+                        <!-- Export Button -->
+                        <button onclick="exportToExcel()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 mt-4 shadow-lg shadow-emerald-100">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            ดาวน์โหลดรายงาน Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Efficiency Tracker -->
+                <div class="card p-6 bg-slate-800 text-white">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-slate-400 text-sm">อัตราความสำเร็จ (ปิดคดี)</span>
+                        <span id="efficiencyRate" class="text-xl font-bold text-green-400">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-700 rounded-full h-2">
+                        <div id="efficiencyBar" class="bg-green-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content: Dashboard & Table -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Status Dashboard -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="card p-5 border-b-4 border-blue-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">เคสทั้งหมด</p>
+                        <p id="statTotal" class="text-3xl font-black text-slate-800 mt-1">0</p>
+                    </div>
+                    <div class="card p-5 border-b-4 border-green-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">รวมคดีสิ้นสุด</p>
+                        <p id="statClosed" class="text-3xl font-black text-green-600 mt-1">0</p>
+                    </div>
+                    <div class="card p-5 border-b-4 border-orange-500">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">คดีคงเหลือ (คงค้าง)</p>
+                        <p id="statRemaining" class="text-3xl font-black text-orange-600 mt-1">0</p>
+                    </div>
+                </div>
+
+                <!-- Visualization Card -->
+                <div class="card p-6">
+                    <div class="flex flex-col md:flex-row gap-8 items-center">
+                        <div class="w-full md:w-1/2 relative h-64">
+                            <canvas id="mainChart"></canvas>
+                        </div>
+                        <div class="w-full md:w-1/2 space-y-3">
+                            <h3 class="text-lg font-bold text-slate-700 mb-4 border-b pb-2">ประมาณการจำแนกตามหัวข้อ</h3>
+                            <div id="legendItems" class="space-y-2">
+                                <!-- Dynamic Legend -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="card overflow-hidden">
+                    <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                        <h3 class="font-bold text-slate-700 text-base">ตารางสรุปข้อมูลประมาณการ</h3>
+                        <div class="flex gap-2">
+                            <span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded">ข้อมูลจริง</span>
+                            <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded">ประมาณการสถิติ</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-white text-slate-500 uppercase text-xs">
+                                <tr>
+                                    <th class="px-6 py-4 font-bold">ลำดับ</th>
+                                    <th class="px-6 py-4 font-bold">หัวข้อสถานะคดี</th>
+                                    <th class="px-6 py-4 text-right font-bold">จำนวน (คดี)</th>
+                                    <th class="px-6 py-4 text-right font-bold">หมายเหตุ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTable" class="divide-y divide-slate-100">
+                                <!-- Row content -->
+                            </tbody>
+                            <tfoot id="tableFooter" class="bg-slate-50 font-bold">
+                                <!-- Footer summary -->
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chartInstance;
+        let currentData = {};
+
+        // น้ำหนักสำหรับการประมาณการหัวข้อ 1-4 (กรณีไม่มีข้อมูลจริง)
+        // เมื่อหักคดีส่งอัยการออกแล้ว จะเกลี่ยยอดที่เหลือตามสัดส่วนนี้
+        const weights = {
+            withdrawn: 0.25,      // ถอนคำร้องทุกข์ 25%
+            noDamage: 0.20,       // ไม่เกิดความเสียหาย 20%
+            notCriminal: 0.15,    // ไม่เป็นความผิดอาญา 15%
+            noContact: 0.40       // ติดต่อไม่ได้/ไม่เข้าพบ 40%
+        };
+
+        const config = {
+            labels: [
+                '1. ถอนคำร้องทุกข์', 
+                '2. ไม่เกิดความเสียหาย', 
+                '3. ไม่เป็นความผิดอาญา', 
+                '4. ติดต่อไม่ได้ (14/30 วัน)', 
+                '5. ส่งสำนวนพนักงานอัยการ',
+                'คดีคงเหลือระหว่างดำเนินการ'
+            ],
+            colors: ['#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#cbd5e1']
+        };
+
+        function initChart() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: config.labels,
+                    datasets: [{
+                        data: [0, 0, 0, 0, 0, 0],
+                        backgroundColor: config.colors,
+                        hoverOffset: 12,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    cutout: '75%'
+                }
+            });
+        }
+
+        function calculateResults() {
+            const total = parseInt(document.getElementById('totalCases').value) || 0;
+            const closed = parseInt(document.getElementById('totalClosed').value) || 0;
+            const prosIn = parseInt(document.getElementById('prosecutorInput').value) || 0;
+            
+            const errEl = document.getElementById('errorMessage');
+            
+            // Validate Logic: Closed cannot exceed Total, Pros cannot exceed Closed
+            const validClosed = Math.min(total, closed);
+            let finalPros = prosIn;
+
+            if (prosIn > validClosed) {
+                errEl.classList.remove('hidden');
+                finalPros = validClosed;
+            } else {
+                errEl.classList.add('hidden');
+            }
+
+            const remaining = Math.max(0, total - validClosed);
+            const othersAmount = Math.max(0, validClosed - finalPros);
+
+            // ประมาณการคดี 1-4
+            const v1 = Math.round(othersAmount * weights.withdrawn);
+            const v2 = Math.round(othersAmount * weights.noDamage);
+            const v3 = Math.round(othersAmount * weights.notCriminal);
+            const v4 = Math.max(0, othersAmount - (v1 + v2 + v3)); // ใช้ส่วนต่างที่เหลือทั้งหมดลงข้อ 4
+            const v5 = finalPros;
+
+            // เก็บสถานะข้อมูลล่าสุด
+            currentData = {
+                total, v1, v2, v3, v4, v5,
+                closedTotal: validClosed,
+                remaining
+            };
+
+            // อัปเดต UI หน้าหลัก
+            document.getElementById('statTotal').innerText = total.toLocaleString();
+            document.getElementById('statClosed').innerText = validClosed.toLocaleString();
+            document.getElementById('statRemaining').innerText = remaining.toLocaleString();
+
+            const efficiency = total > 0 ? ((validClosed / total) * 100).toFixed(1) : 0;
+            document.getElementById('efficiencyRate').innerText = efficiency + '%';
+            document.getElementById('efficiencyBar').style.width = efficiency + '%';
+
+            // อัปเดตกราฟ
+            chartInstance.data.datasets[0].data = [v1, v2, v3, v4, v5, remaining];
+            chartInstance.update();
+
+            renderTableAndLegend([v1, v2, v3, v4, v5], validClosed, total);
+        }
+
+        function renderTableAndLegend(values, closedTotal, grandTotal) {
+            const labels = config.labels.slice(0, 5);
+            const colors = config.colors.slice(0, 5);
+            const meta = [
+                { type: 'ประมาณการ', badge: 'bg-blue-50 text-blue-600' },
+                { type: 'ประมาณการ', badge: 'bg-blue-50 text-blue-600' },
+                { type: 'ประมาณการ', badge: 'bg-blue-50 text-blue-600' },
+                { type: 'ประมาณการ', badge: 'bg-blue-50 text-blue-600' },
+                { type: 'ข้อมูลจริง', badge: 'bg-amber-50 text-amber-600' }
+            ];
+            
+            let legendHtml = '';
+            let tableHtml = '';
+
+            values.forEach((val, i) => {
+                legendHtml += `
+                    <div class="flex justify-between items-center text-sm">
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 rounded-full mr-2" style="background-color: ${colors[i]}"></span>
+                            <span class="text-slate-600">${labels[i]}</span>
+                        </div>
+                        <span class="font-bold text-slate-800">${val.toLocaleString()}</span>
+                    </div>
+                `;
+
+                tableHtml += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4 text-slate-400 font-mono">${i+1}</td>
+                        <td class="px-6 py-4 font-medium text-slate-700">${labels[i]}</td>
+                        <td class="px-6 py-4 text-right font-bold text-slate-800">${val.toLocaleString()}</td>
+                        <td class="px-6 py-4 text-right">
+                            <span class="text-[10px] px-2 py-0.5 rounded-full ${meta[i].badge} font-medium">${meta[i].type}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('legendItems').innerHTML = legendHtml;
+            document.getElementById('reportTable').innerHTML = tableHtml;
+            
+            const rem = grandTotal - closedTotal;
+            document.getElementById('tableFooter').innerHTML = `
+                <tr class="bg-orange-50 border-t-2 border-orange-200">
+                    <td colspan="2" class="px-6 py-4 text-orange-700">คงเหลืออยู่ระหว่างดำเนินการ (คงค้าง)</td>
+                    <td class="px-6 py-4 text-right text-orange-700 font-black">${rem.toLocaleString()}</td>
+                    <td class="px-6 py-4 text-right text-orange-700 italic text-[10px]">Auto-Calculated</td>
+                </tr>
+            `;
+        }
+
+        function exportToExcel() {
+            // สร้างข้อมูลตามรูปแบบคอลัมน์ที่ต้องการ
+            const exportData = [
+                {
+                    "เคส ID ทั้งหมด": currentData.total,
+                    "ถอนคำร้องทุกข์": currentData.v1,
+                    "ไม่เกิดความเสียหาย": currentData.v2,
+                    "ไม่เป็นความผิดอาญา": currentData.v3,
+                    "ติดต่อ ผสห.ไม่ได้ภายใน 14 วันหรือติดต่อได้แต่ไม่เข้าพบภายใน 30 วัน": currentData.v4,
+                    "ส่งสำนวนอัยการ": currentData.v5,
+                    "รวมคดีสิ้นสุด": currentData.closedTotal,
+                    "คงเหลือ": currentData.remaining
+                }
+            ];
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+
+            // ปรับความกว้างคอลัมน์
+            worksheet['!cols'] = [
+                { wch: 15 }, // เคสทั้งหมด
+                { wch: 15 }, // ถอนคำร้อง
+                { wch: 18 }, // ไม่เกิดเสียหาย
+                { wch: 18 }, // ไม่เป็นความผิดอาญา
+                { wch: 65 }, // ติดต่อไม่ได้ (ยาวสุด)
+                { wch: 15 }, // ส่งอัยการ
+                { wch: 15 }, // รวมสิ้นสุด
+                { wch: 12 }  // คงเหลือ
+            ];
+
+            const today = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(workbook, `รายงานประมาณการคดี_${today}.xlsx`);
+        }
+
+        window.onload = () => {
+            initChart();
+            calculateResults();
+        };
+    </script>
+</body>
+</html>
