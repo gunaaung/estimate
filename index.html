@@ -13,12 +13,13 @@
     <style>
         body {
             font-family: 'Sarabun', sans-serif;
-            background-color: #f1f5f9;
+            background-color: #f8fafc;
         }
         .card {
             background: white;
             border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            transition: transform 0.2s ease;
         }
         .input-focus {
             transition: all 0.2s;
@@ -28,109 +29,124 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
             outline: none;
         }
-        /* Remove arrows from number input */
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 280px;
+            width: 280px;
         }
     </style>
 </head>
 <body class="p-4 md:p-8">
     <div class="max-w-6xl mx-auto">
         <!-- Header Section -->
-        <div class="mb-8 text-center">
-            <h1 class="text-3xl font-bold text-slate-800 mb-2">ระบบประมาณการและรายงานผลคดี</h1>
-            <p class="text-slate-500 text-lg">ป้อนข้อมูลคดีสิ้นสุดและคดีส่งอัยการเพื่อประมาณการสัดส่วนคดีและส่งออก Excel</p>
+        <div class="mb-10 text-center">
+            <h1 class="text-3xl font-extrabold text-slate-800 mb-2">ระบบประมาณการและรายงานผลคดี</h1>
+            <p class="text-slate-500 text-lg">จัดการข้อมูลสถิติคดีและประมาณการสัดส่วนผลดำเนินการอัตโนมัติ (6+1 สถานะ)</p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Sidebar: User Input -->
             <div class="lg:col-span-1 space-y-6">
                 <div class="card p-6 border-t-4 border-blue-600">
-                    <h2 class="text-xl font-semibold mb-5 text-slate-700 flex items-center">
+                    <h2 class="text-xl font-bold mb-6 text-slate-700 flex items-center">
                         <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
                         บันทึกข้อมูลนำเข้า
                     </h2>
                     
-                    <div class="space-y-4">
-                        <div class="bg-blue-50 p-4 rounded-lg">
-                            <label class="block text-sm font-bold text-blue-700 mb-2">1. เคส ID ทั้งหมด</label>
+                    <div class="space-y-5">
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                            <label class="block text-sm font-bold text-blue-800 mb-2">1. จำนวนเคส ID ทั้งหมด</label>
                             <input type="number" id="totalCases" value="100" min="0" oninput="calculateResults()" 
-                                class="input-focus w-full px-4 py-2 border border-blue-200 rounded-lg text-lg font-bold text-slate-800">
+                                class="input-focus w-full px-4 py-2.5 border border-blue-200 rounded-lg text-xl font-bold text-slate-800">
                         </div>
                         
-                        <div class="bg-green-50 p-4 rounded-lg">
-                            <label class="block text-sm font-bold text-green-700 mb-2">2. เคสไอดีที่กดสิ้นสุดแล้ว</label>
-                            <input type="number" id="totalClosed" value="60" min="0" oninput="calculateResults()" 
-                                class="input-focus w-full px-4 py-2 border border-green-200 rounded-lg text-lg font-bold text-slate-800">
+                        <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                            <label class="block text-sm font-bold text-emerald-800 mb-2">2. เคสที่ดำเนินการสิ้นสุดแล้ว</label>
+                            <input type="number" id="totalClosed" value="70" min="0" oninput="calculateResults()" 
+                                class="input-focus w-full px-4 py-2.5 border border-emerald-200 rounded-lg text-xl font-bold text-slate-800">
                         </div>
 
-                        <div class="bg-amber-50 p-4 rounded-lg border border-amber-200">
-                            <label class="block text-sm font-bold text-amber-700 mb-2">3. ส่งสำนวนพนักงานอัยการ (จริง)</label>
-                            <input type="number" id="prosecutorInput" value="40" min="0" oninput="calculateResults()" 
-                                class="input-focus w-full px-4 py-2 border border-amber-300 rounded-lg text-lg font-bold text-slate-800">
+                        <div class="bg-amber-50 p-4 rounded-xl border border-amber-100">
+                            <label class="block text-sm font-bold text-amber-800 mb-2">3. ส่งพนักงานอัยการ (ข้อมูลจริง)</label>
+                            <input type="number" id="prosecutorInput" value="35" min="0" oninput="calculateResults()" 
+                                class="input-focus w-full px-4 py-2.5 border border-amber-200 rounded-lg text-xl font-bold text-slate-800">
                         </div>
 
-                        <!-- Error Message -->
-                        <div id="errorMessage" class="hidden p-3 bg-red-100 text-red-700 text-xs rounded-lg flex items-start">
-                            <svg class="w-4 h-4 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <span>จำนวนคดีส่งอัยการต้องไม่เกินจำนวนคดีที่สิ้นสุดทั้งหมด</span>
+                        <!-- Error Messages -->
+                        <div id="errorClosed" class="hidden p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-100 flex items-start">
+                            <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/></svg>
+                            <span>จำนวนคดีสิ้นสุดต้องไม่เกินจำนวนเคสทั้งหมด</span>
+                        </div>
+                        <div id="errorPros" class="hidden p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-100 flex items-start">
+                            <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/></svg>
+                            <span>จำนวนส่งอัยการต้องไม่เกินจำนวนคดีสิ้นสุด</span>
                         </div>
 
                         <!-- Export Button -->
-                        <button onclick="exportToExcel()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 mt-4 shadow-lg shadow-emerald-100">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        <button onclick="exportToExcel()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 px-4 rounded-xl transition-all flex items-center justify-center gap-3 mt-4 shadow-lg active:scale-[0.98]">
+                            <svg class="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                             </svg>
-                            ดาวน์โหลดรายงาน Excel
+                            ส่งออกไฟล์รายงาน Excel
                         </button>
                     </div>
                 </div>
 
-                <!-- Efficiency Tracker -->
-                <div class="card p-6 bg-slate-800 text-white">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-slate-400 text-sm">อัตราความสำเร็จ (ปิดคดี)</span>
-                        <span id="efficiencyRate" class="text-xl font-bold text-green-400">0%</span>
+                <!-- Performance Indicator -->
+                <div class="card p-6 bg-gradient-to-br from-slate-800 to-slate-900 text-white border-none">
+                    <div class="flex justify-between items-end mb-3">
+                        <div>
+                            <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">ความสำเร็จการปิดคดี</p>
+                            <h3 id="efficiencyRate" class="text-3xl font-black text-emerald-400">0%</h3>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-full border border-emerald-500/30">Resolution Rate</span>
+                        </div>
                     </div>
-                    <div class="w-full bg-slate-700 rounded-full h-2">
-                        <div id="efficiencyBar" class="bg-green-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    <div class="w-full bg-slate-700/50 rounded-full h-3 overflow-hidden border border-slate-600">
+                        <div id="efficiencyBar" class="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full rounded-full transition-all duration-700 ease-out" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Main Content: Dashboard & Table -->
             <div class="lg:col-span-2 space-y-6">
-                <!-- Status Dashboard -->
+                <!-- Stat Summary Boxes -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="card p-5 border-b-4 border-blue-500">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">เคสทั้งหมด</p>
+                    <div class="card p-5 border-l-4 border-blue-500">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">เคส ID ทั้งหมด</p>
                         <p id="statTotal" class="text-3xl font-black text-slate-800 mt-1">0</p>
                     </div>
-                    <div class="card p-5 border-b-4 border-green-500">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">รวมคดีสิ้นสุด</p>
-                        <p id="statClosed" class="text-3xl font-black text-green-600 mt-1">0</p>
+                    <div class="card p-5 border-l-4 border-emerald-500">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-widest text-emerald-600">รวมสิ้นสุดแล้ว</p>
+                        <p id="statClosed" class="text-3xl font-black text-emerald-600 mt-1">0</p>
                     </div>
-                    <div class="card p-5 border-b-4 border-orange-500">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">คดีคงเหลือ (คงค้าง)</p>
+                    <div class="card p-5 border-l-4 border-orange-500">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-widest text-orange-600">คดีคงค้าง (Pending)</p>
                         <p id="statRemaining" class="text-3xl font-black text-orange-600 mt-1">0</p>
                     </div>
                 </div>
 
-                <!-- Visualization Card -->
-                <div class="card p-6">
+                <!-- Chart Card -->
+                <div class="card p-8">
                     <div class="flex flex-col md:flex-row gap-8 items-center">
-                        <div class="w-full md:w-1/2 relative h-64">
+                        <div class="chart-container">
                             <canvas id="mainChart"></canvas>
                         </div>
-                        <div class="w-full md:w-1/2 space-y-3">
-                            <h3 class="text-lg font-bold text-slate-700 mb-4 border-b pb-2">ประมาณการจำแนกตามหัวข้อ</h3>
-                            <div id="legendItems" class="space-y-2">
+                        <div class="flex-1 space-y-4 w-full">
+                            <h3 class="text-lg font-extrabold text-slate-700 flex items-center">
+                                <span class="w-2 h-6 bg-blue-600 rounded-full mr-3"></span>
+                                รายละเอียดประมาณการรายหัวข้อ
+                            </h3>
+                            <div id="legendItems" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <!-- Dynamic Legend -->
                             </div>
                         </div>
@@ -138,29 +154,33 @@
                 </div>
 
                 <!-- Data Table -->
-                <div class="card overflow-hidden">
+                <div class="card overflow-hidden border border-slate-200 shadow-sm">
                     <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                        <h3 class="font-bold text-slate-700 text-base">ตารางสรุปข้อมูลประมาณการ</h3>
+                        <h3 class="font-bold text-slate-700">ตารางวิเคราะห์ข้อมูลเชิงลึก</h3>
                         <div class="flex gap-2">
-                            <span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded">ข้อมูลจริง</span>
-                            <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded">ประมาณการสถิติ</span>
+                            <span class="flex items-center text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                                <span class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1.5"></span> ประมาณการ
+                            </span>
+                            <span class="flex items-center text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                                <span class="w-1.5 h-1.5 bg-amber-500 rounded-full mr-1.5"></span> ข้อมูลจริง
+                            </span>
                         </div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left">
-                            <thead class="bg-white text-slate-500 uppercase text-xs">
+                            <thead class="bg-white text-slate-400 uppercase text-[10px] tracking-widest border-b border-slate-100">
                                 <tr>
                                     <th class="px-6 py-4 font-bold">ลำดับ</th>
-                                    <th class="px-6 py-4 font-bold">หัวข้อสถานะคดี</th>
-                                    <th class="px-6 py-4 text-right font-bold">จำนวน (คดี)</th>
-                                    <th class="px-6 py-4 text-right font-bold">หมายเหตุ</th>
+                                    <th class="px-6 py-4 font-bold">รายการสถานะ</th>
+                                    <th class="px-6 py-4 text-right font-bold">จำนวน (เคส)</th>
+                                    <th class="px-6 py-4 text-center font-bold">ที่มา</th>
                                 </tr>
                             </thead>
-                            <tbody id="reportTable" class="divide-y divide-slate-100">
+                            <tbody id="reportTable" class="divide-y divide-slate-50">
                                 <!-- Row content -->
                             </tbody>
-                            <tfoot id="tableFooter" class="bg-slate-50 font-bold">
-                                <!-- Footer summary -->
+                            <tfoot id="tableFooter">
+                                <!-- Footer -->
                             </tfoot>
                         </table>
                     </div>
@@ -173,25 +193,29 @@
         let chartInstance;
         let currentData = {};
 
-        // น้ำหนักสำหรับการประมาณการหัวข้อ 1-4 (กรณีไม่มีข้อมูลจริง)
-        // เมื่อหักคดีส่งอัยการออกแล้ว จะเกลี่ยยอดที่เหลือตามสัดส่วนนี้
+        // ปรับปรุงค่าน้ำหนักสำหรับการประมาณการ (เพิ่มหัวข้อใหม่)
         const weights = {
-            withdrawn: 0.25,      // ถอนคำร้องทุกข์ 25%
-            noDamage: 0.20,       // ไม่เกิดความเสียหาย 20%
-            notCriminal: 0.15,    // ไม่เป็นความผิดอาญา 15%
-            noContact: 0.40       // ติดต่อไม่ได้/ไม่เข้าพบ 40%
+            withdrawn: 0.18,    // 18%
+            noDamage: 0.15,     // 15%
+            notCriminal: 0.10,  // 10%
+            duplicate: 0.12,    // 12% (ใหม่)
+            unspecified: 0.10,  // 10% (ใหม่)
+            noContact: 0.35     // 35% (ส่วนใหญ่ที่เหลือ)
         };
 
         const config = {
             labels: [
-                '1. ถอนคำร้องทุกข์', 
-                '2. ไม่เกิดความเสียหาย', 
-                '3. ไม่เป็นความผิดอาญา', 
-                '4. ติดต่อไม่ได้ (14/30 วัน)', 
-                '5. ส่งสำนวนพนักงานอัยการ',
-                'คดีคงเหลือระหว่างดำเนินการ'
+                'ถอนคำร้องทุกข์', 
+                'ไม่เกิดความเสียหาย', 
+                'ไม่เป็นความผิดอาญา', 
+                'ซ้ำเคสอื่น',
+                'ไม่ระบุ',
+                'ติดต่อไม่ได้/ไม่เข้าพบ', 
+                'ส่งพนักงานอัยการ',
+                'อยู่ระหว่างดำเนินการ'
             ],
-            colors: ['#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#cbd5e1']
+            // เพิ่มสีให้หลากหลายขึ้น
+            colors: ['#10b981', '#3b82f6', '#8b5cf6', '#06b6d4', '#6366f1', '#ec4899', '#f59e0b', '#cbd5e1']
         };
 
         function initChart() {
@@ -201,57 +225,59 @@
                 data: {
                     labels: config.labels,
                     datasets: [{
-                        data: [0, 0, 0, 0, 0, 0],
+                        data: Array(8).fill(0),
                         backgroundColor: config.colors,
                         hoverOffset: 12,
-                        borderWidth: 0
+                        borderWidth: 3,
+                        borderColor: '#ffffff'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    cutout: '75%'
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleFont: { family: 'Sarabun', weight: 'bold' },
+                            bodyFont: { family: 'Sarabun' }
+                        }
+                    },
+                    cutout: '70%'
                 }
             });
         }
 
         function calculateResults() {
             const total = parseInt(document.getElementById('totalCases').value) || 0;
-            const closed = parseInt(document.getElementById('totalClosed').value) || 0;
+            const closedIn = parseInt(document.getElementById('totalClosed').value) || 0;
             const prosIn = parseInt(document.getElementById('prosecutorInput').value) || 0;
             
-            const errEl = document.getElementById('errorMessage');
+            const errClosed = document.getElementById('errorClosed');
+            const errPros = document.getElementById('errorPros');
             
-            // Validate Logic: Closed cannot exceed Total, Pros cannot exceed Closed
-            const validClosed = Math.min(total, closed);
-            let finalPros = prosIn;
+            // Validation
+            let validClosed = Math.min(closedIn, total);
+            if (closedIn > total) errClosed.classList.remove('hidden'); else errClosed.classList.add('hidden');
 
-            if (prosIn > validClosed) {
-                errEl.classList.remove('hidden');
-                finalPros = validClosed;
-            } else {
-                errEl.classList.add('hidden');
-            }
+            let finalPros = Math.min(prosIn, validClosed);
+            if (prosIn > validClosed) errPros.classList.remove('hidden'); else errPros.classList.add('hidden');
 
-            const remaining = Math.max(0, total - validClosed);
-            const othersAmount = Math.max(0, validClosed - finalPros);
+            const remaining = total - validClosed;
+            const othersAmount = validClosed - finalPros;
 
-            // ประมาณการคดี 1-4
+            // ประมาณการรายหัวข้อย่อย (6 หัวข้อ)
             const v1 = Math.round(othersAmount * weights.withdrawn);
             const v2 = Math.round(othersAmount * weights.noDamage);
             const v3 = Math.round(othersAmount * weights.notCriminal);
-            const v4 = Math.max(0, othersAmount - (v1 + v2 + v3)); // ใช้ส่วนต่างที่เหลือทั้งหมดลงข้อ 4
-            const v5 = finalPros;
+            const v4 = Math.round(othersAmount * weights.duplicate);
+            const v5 = Math.round(othersAmount * weights.unspecified);
+            const v6 = Math.max(0, othersAmount - (v1 + v2 + v3 + v4 + v5)); // ติดต่อไม่ได้ (ส่วนต่าง)
+            const v7 = finalPros; // ส่งอัยการ (จริง)
 
-            // เก็บสถานะข้อมูลล่าสุด
-            currentData = {
-                total, v1, v2, v3, v4, v5,
-                closedTotal: validClosed,
-                remaining
-            };
+            currentData = { total, v1, v2, v3, v4, v5, v6, v7, closedTotal: validClosed, remaining };
 
-            // อัปเดต UI หน้าหลัก
+            // Update UI
             document.getElementById('statTotal').innerText = total.toLocaleString();
             document.getElementById('statClosed').innerText = validClosed.toLocaleString();
             document.getElementById('statRemaining').innerText = remaining.toLocaleString();
@@ -260,45 +286,41 @@
             document.getElementById('efficiencyRate').innerText = efficiency + '%';
             document.getElementById('efficiencyBar').style.width = efficiency + '%';
 
-            // อัปเดตกราฟ
-            chartInstance.data.datasets[0].data = [v1, v2, v3, v4, v5, remaining];
+            // Update Chart (7 สถานะ + 1 คงค้าง)
+            chartInstance.data.datasets[0].data = [v1, v2, v3, v4, v5, v6, v7, remaining];
             chartInstance.update();
 
-            renderTableAndLegend([v1, v2, v3, v4, v5], validClosed, total);
+            renderDetails([v1, v2, v3, v4, v5, v6, v7], remaining);
         }
 
-        function renderTableAndLegend(values, closedTotal, grandTotal) {
-            const labels = config.labels.slice(0, 5);
-            const colors = config.colors.slice(0, 5);
-            const meta = [
-                { type: 'ประมาณการ', badge: 'bg-blue-50 text-blue-600' },
-                { type: 'ประมาณการ', badge: 'bg-blue-50 text-blue-600' },
-                { type: 'ประมาณการ', badge: 'bg-blue-50 text-blue-600' },
-                { type: 'ประมาณการ', badge: 'bg-blue-50 text-blue-600' },
-                { type: 'ข้อมูลจริง', badge: 'bg-amber-50 text-amber-600' }
-            ];
-            
+        function renderDetails(values, remaining) {
             let legendHtml = '';
             let tableHtml = '';
-
+            
             values.forEach((val, i) => {
+                const isActual = i === 6; // รายการที่ 7 คือข้อมูลจริง
+                const color = config.colors[i];
+                const label = config.labels[i];
+                
                 legendHtml += `
-                    <div class="flex justify-between items-center text-sm">
-                        <div class="flex items-center">
-                            <span class="w-3 h-3 rounded-full mr-2" style="background-color: ${colors[i]}"></span>
-                            <span class="text-slate-600">${labels[i]}</span>
+                    <div class="flex justify-between items-center p-2 rounded bg-slate-50 border border-slate-100">
+                        <div class="flex items-center text-[11px] font-medium text-slate-600 truncate mr-2">
+                            <span class="w-2.5 h-2.5 rounded-full mr-2 flex-shrink-0" style="background-color: ${color}"></span>
+                            <span class="truncate">${label}</span>
                         </div>
-                        <span class="font-bold text-slate-800">${val.toLocaleString()}</span>
+                        <span class="font-bold text-slate-800 text-xs">${val.toLocaleString()}</span>
                     </div>
                 `;
 
                 tableHtml += `
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-6 py-4 text-slate-400 font-mono">${i+1}</td>
-                        <td class="px-6 py-4 font-medium text-slate-700">${labels[i]}</td>
-                        <td class="px-6 py-4 text-right font-bold text-slate-800">${val.toLocaleString()}</td>
-                        <td class="px-6 py-4 text-right">
-                            <span class="text-[10px] px-2 py-0.5 rounded-full ${meta[i].badge} font-medium">${meta[i].type}</span>
+                    <tr class="hover:bg-blue-50/40 transition-colors">
+                        <td class="px-6 py-3 text-slate-400 font-mono text-xs">${i+1}</td>
+                        <td class="px-6 py-3 font-semibold text-slate-700">${label}</td>
+                        <td class="px-6 py-3 text-right font-black text-slate-800">${val.toLocaleString()}</td>
+                        <td class="px-6 py-3 text-center">
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-tight ${isActual ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}">
+                                ${isActual ? 'Actual' : 'Est.'}
+                            </span>
                         </td>
                     </tr>
                 `;
@@ -307,49 +329,42 @@
             document.getElementById('legendItems').innerHTML = legendHtml;
             document.getElementById('reportTable').innerHTML = tableHtml;
             
-            const rem = grandTotal - closedTotal;
             document.getElementById('tableFooter').innerHTML = `
-                <tr class="bg-orange-50 border-t-2 border-orange-200">
-                    <td colspan="2" class="px-6 py-4 text-orange-700">คงเหลืออยู่ระหว่างดำเนินการ (คงค้าง)</td>
-                    <td class="px-6 py-4 text-right text-orange-700 font-black">${rem.toLocaleString()}</td>
-                    <td class="px-6 py-4 text-right text-orange-700 italic text-[10px]">Auto-Calculated</td>
+                <tr class="bg-orange-50/40 border-t border-orange-100">
+                    <td colspan="2" class="px-6 py-4 text-orange-800 font-bold">อยู่ระหว่างดำเนินการ (Pending)</td>
+                    <td class="px-6 py-4 text-right text-orange-800 font-black text-lg">${remaining.toLocaleString()}</td>
+                    <td class="px-6 py-4 text-center text-orange-400 text-[9px] font-bold uppercase tracking-widest">Calculated</td>
                 </tr>
             `;
         }
 
         function exportToExcel() {
-            // สร้างข้อมูลตามรูปแบบคอลัมน์ที่ต้องการ
-            const exportData = [
-                {
-                    "เคส ID ทั้งหมด": currentData.total,
-                    "ถอนคำร้องทุกข์": currentData.v1,
-                    "ไม่เกิดความเสียหาย": currentData.v2,
-                    "ไม่เป็นความผิดอาญา": currentData.v3,
-                    "ติดต่อ ผสห.ไม่ได้ภายใน 14 วันหรือติดต่อได้แต่ไม่เข้าพบภายใน 30 วัน": currentData.v4,
-                    "ส่งสำนวนอัยการ": currentData.v5,
-                    "รวมคดีสิ้นสุด": currentData.closedTotal,
-                    "คงเหลือ": currentData.remaining
-                }
-            ];
+            const exportData = [{
+                "จำนวนเคสทั้งหมด": currentData.total,
+                "1. ถอนคำร้องทุกข์": currentData.v1,
+                "2. ไม่เกิดความเสียหาย": currentData.v2,
+                "3. ไม่เป็นความผิดอาญา": currentData.v3,
+                "4. ซ้ำเคสอื่น": currentData.v4,
+                "5. ไม่ระบุ": currentData.v5,
+                "6. ติดต่อไม่ได้/ไม่เข้าพบ": currentData.v6,
+                "7. ส่งพนักงานอัยการ (จริง)": currentData.v7,
+                "รวมคดีสิ้นสุด": currentData.closedTotal,
+                "คดีคงเหลือ (Pending)": currentData.remaining,
+                "วันที่ออกรายงาน": new Date().toLocaleDateString('th-TH')
+            }];
 
             const worksheet = XLSX.utils.json_to_sheet(exportData);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+            XLSX.utils.book_append_sheet(workbook, worksheet, "CaseSummary");
 
-            // ปรับความกว้างคอลัมน์
             worksheet['!cols'] = [
-                { wch: 15 }, // เคสทั้งหมด
-                { wch: 15 }, // ถอนคำร้อง
-                { wch: 18 }, // ไม่เกิดเสียหาย
-                { wch: 18 }, // ไม่เป็นความผิดอาญา
-                { wch: 65 }, // ติดต่อไม่ได้ (ยาวสุด)
-                { wch: 15 }, // ส่งอัยการ
-                { wch: 15 }, // รวมสิ้นสุด
-                { wch: 12 }  // คงเหลือ
+                { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, 
+                { wch: 15 }, { wch: 15 }, { wch: 22 }, { wch: 22 }, 
+                { wch: 15 }, { wch: 18 }, { wch: 20 }
             ];
 
             const today = new Date().toISOString().split('T')[0];
-            XLSX.writeFile(workbook, `รายงานประมาณการคดี_${today}.xlsx`);
+            XLSX.writeFile(workbook, `Case_Estimation_${today}.xlsx`);
         }
 
         window.onload = () => {
